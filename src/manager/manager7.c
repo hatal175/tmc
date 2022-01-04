@@ -53,9 +53,6 @@ const u32 gUnk_081080A4[0x50] = {
 
 const u8 gUnk_081081E4[] = { 0x16, 0x17, 0x17, 0x18, 0x18 };
 
-#ifdef EU
-ASM_FUNC("asm/non_matching/eu/Manager7_Main.inc", void Manager7_Main(Manager7* this))
-#else
 void Manager7_Main(Manager7* this) {
     u32 tmp;
     const u32* tmp2;
@@ -64,9 +61,17 @@ void Manager7_Main(Manager7* this) {
         this->manager.unk_0e = 8;
         this->unk_20 = 0xFF;
 
+#ifndef EU
         SetDefaultPriority((Entity*)this, PRIO_PLAYER_EVENT);
+#endif
         RegisterTransitionManager(this, sub_08057E30, 0);
     }
+
+#ifdef EU
+    if (gRoomControls.unk2)
+        return;
+#endif
+
     if (sub_08057E40(this)) {
         tmp = (u32)gRoomVars.unk_10[0];
         if (this->unk_20 != tmp) {
@@ -74,9 +79,11 @@ void Manager7_Main(Manager7* this) {
             this->manager.unk_0e = 0;
         }
     }
+#ifndef EU
     if (gRoomControls.unk2)
         return;
-#ifndef JP
+#endif
+#if !defined(JP) && !defined(EU)
     tmp = this->unk_20;
 #endif
     tmp2 = &gUnk_081080A4[tmp << 4];
@@ -97,14 +104,18 @@ void Manager7_Main(Manager7* this) {
             LoadResourceAsync(&gGlobalGfxAndPalettes[tmp2[(this->manager.unk_0e << 1)]],
                               tmp2[(this->manager.unk_0e << 1) + 1], 0x1000);
             this->manager.unk_0e++;
+#ifdef EU
+            gUnk_02034490[0] = 0;
+            break;
+#else
             break;
         case 8:
             gUnk_02034490[0] = 0;
             this->manager.unk_0e++;
             break;
+#endif
     }
 }
-#endif
 
 void sub_08057E30(Manager7* this) {
     sub_08057E7C(gRoomVars.unk_10[0]);
@@ -128,14 +139,15 @@ void sub_08057E64() {
     }
 }
 
-#ifdef EU
-ASM_FUNC("asm/non_matching/eu/sub_08057E7C.inc", void sub_08057E7C(u32 unk1))
-#else
 void sub_08057E7C(u32 unk1) {
     u32 tmp;
     const u32* tmp2;
+
+#ifndef EU
     if (unk1 > 4)
         return;
+#endif
+
     LoadPaletteGroup(gUnk_081081E4[unk1]);
     tmp2 = &gUnk_081080A4[unk1 << 4];
     for (tmp = 0; tmp < 8; tmp++, tmp2 += 2) {
@@ -143,4 +155,3 @@ void sub_08057E7C(u32 unk1) {
     }
     gRoomVars.unk_10[0] = unk1;
 }
-#endif

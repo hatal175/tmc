@@ -502,7 +502,68 @@ const u8 gUnk_08107C0F[] = { 0x8, 0x1e, 0x4, 0x12, 0x0 };
 const u8 gUnk_08107C14[] = { 0x8, 0x1e, 0x8, 0xFE, 0x0 };
 
 #ifdef EU
-ASM_FUNC("asm/non_matching/eu/TextBoxHandlerQuestion.inc", static void TextDispEnquiry(TextRender* ctb))
+NONMATCH("asm/non_matching/eu/TextBoxHandlerQuestion.inc", static void TextDispEnquiry(TextRender* this)) {
+    s32 nextTextIdx, choiceIdx, lastChoice;
+    u32 doSwitch;
+    const u8* src;
+
+    choiceIdx = gMessageChoices.currentChoice;
+    switch (gInput.newKeys) {
+        case START_BUTTON:
+        case A_BUTTON:
+            nextTextIdx = gMessageChoices.unk_10[choiceIdx];
+            if (nextTextIdx == 0) {
+                src = gUnk_08107C14;
+            } else {
+                this->message.textIndex = nextTextIdx;
+                sub_0805EEB4(&this->curToken, nextTextIdx);
+                src = gUnk_08107C0F;
+            }
+            sub_0805EF40(&this->curToken, src);
+            gUnk_02000040.unk_01 = gMessageChoices.currentChoice;
+            gUnk_02000040.unk_00 = 3;
+            MemClear(&gMessageChoices, sizeof(gMessageChoices));
+            SoundReq(SFX_TEXTBOX_SELECT);
+            this->renderStatus = RENDER_UPDATE;
+            break;
+        case DPAD_LEFT:
+            choiceIdx--;
+            break;
+        case DPAD_RIGHT:
+            choiceIdx++;
+            break;
+        default:
+            break;
+    }
+    choiceIdx = (choiceIdx + gMessageChoices.choiceCount) % gMessageChoices.choiceCount;
+    lastChoice = gMessageChoices.currentChoice;
+    if (lastChoice != choiceIdx) {
+        gMessageChoices.currentChoice = choiceIdx;
+        SoundReq(SFX_TEXTBOX_CHOICE);
+        doSwitch = 1;
+    } else {
+        doSwitch = 0;
+    }
+    if (gUnk_02000040.unk_00 == 1) {
+        gMessageChoices.unk_00 = gUnk_02000040.unk_00 = 2;
+        doSwitch = 1;
+    }
+    if (doSwitch) {
+        u16 t;
+        u8* addr;
+        u8 tmp;
+        t = gTextRender._50.unk6;
+        gTextRender._50.unk6 = gMessageChoices.unk_08[choiceIdx];
+        sub_0805F8E4(0, &gTextRender._50);
+        gTextRender._50.unk6 = gMessageChoices.unk_08[lastChoice];
+        sub_0805F8E4(1, &gTextRender._50);
+        gTextRender._50.unk6 = t;
+        tmp = 1;
+        addr = (u8*)(0x0202281D);
+        *addr = tmp;
+    }
+}
+END_NONMATCH
 #else
 
 static void TextDispEnquiry(TextRender* this) {

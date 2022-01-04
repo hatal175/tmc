@@ -5,6 +5,7 @@
 #include "screen.h"
 
 extern void sub_08057044(u32, struct_020227E8*, u32);
+extern bool32 sub_0802B234(Entity*);
 extern u32 gUnk_081146B8;
 
 void Phonograph(Entity* this) {
@@ -23,13 +24,15 @@ void Phonograph(Entity* this) {
 ASM_FUNC("asm/non_matching/phonograph/sub_0806E964.inc",
          void sub_0806E964(Entity* this, ScriptExecutionContext* context))
 
-#ifdef EU
-ASM_FUNC("asm/non_matching/eu/sub_0806EABC.inc", void sub_0806EABC(Entity* this, u32 param))
-#else
 void sub_0806EABC(Entity* this, u32 param) {
     sub_08050384();
+
+#ifdef EU
+    sub_08057044((s16)this->field_0x68.HWORD, &gUnk_020227E8[0], 0x202020);
+#else
     sub_08057044(param, &gUnk_020227E8[0], 0x202020);
+#endif
+
     sub_0805F46C(0x3302, &gUnk_081146B8);
     gScreen.bg0.updated = 1;
 }
-#endif

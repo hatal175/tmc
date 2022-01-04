@@ -10,6 +10,7 @@ extern void sub_08078930(Entity*);
 extern s32 sub_080012DC(Entity*);
 extern Entity* sub_08049DF4(u32);
 extern void sub_08079BD8(Entity*);
+extern u32 sub_080002E0(u32, u32);
 
 void sub_0802AD1C(Entity*, u32);
 void sub_0802AD54(Entity*);
@@ -187,10 +188,8 @@ void sub_0802AA40(Entity* this) {
     }
 }
 
-#ifdef EU
-ASM_FUNC("asm/non_matching/eu/sub_0802AAC0.inc", void sub_0802AAC0(Entity* this))
-#else
 void sub_0802AAC0(Entity* this) {
+    u32 actionDelay;
     sub_0802AC40(this);
     if (--this->field_0xf == 0) {
         sub_0802AD1C(this, 4);
@@ -203,27 +202,59 @@ void sub_0802AAC0(Entity* this) {
         } else if (ent->next == NULL) {
             this->field_0x80.HALF.HI = 0;
             this->child = NULL;
+#ifdef EU
+        } else if ((actionDelay = ent->actionDelay) == 0) {
+            s32 r0 = ((this->x.HALF.HI - gRoomControls.roomOriginX) >> 4) & 0x3f;
+            s32 r1 = ((this->y.HALF.HI - gRoomControls.roomOriginY) >> 4) & 0x3f;
+            if (sub_080002E0(r0 | (r1 << 6), 1) == 0) {
+                if (EntityInRectRadius(this, &gPlayerEntity, 0x10, 0x10)) {
+                    if (ent->field_0xf <= 0x50) {
+                        this->field_0x80.HALF.HI = actionDelay;
+                    }
+                }
+            } else if (ent->field_0xf <= 0x13) {
+                this->field_0x80.HALF.HI = actionDelay;
+            }
+        }
+#else
         } else if (ent->actionDelay == 0 && ent->field_0xf < 0x51) {
             this->field_0x80.HALF.HI = 0;
         }
+#endif
     } else {
         this->action = 4;
         this->actionDelay = 0xc0;
         this->field_0xf = 4;
         this->field_0x80.HALF.LO ^= 1;
+#ifndef EU
         this->field_0x78.HALF.LO = 0;
         this->field_0x78.HALF.HI = 4;
         this->direction = 0xff;
+#endif
         InitializeAnimation(this, 0);
     }
 }
-#endif
 
-#ifdef EU
-ASM_FUNC("asm/non_matching/eu/sub_0802AB40.inc", void sub_0802AB40(Entity* this));
-#else
 void sub_0802AB40(Entity* this) {
     sub_0802AC40(this);
+
+#ifdef EU
+    if (--this->actionDelay == 0) {
+        if ((this->field_0x7a.HALF.LO) <= 4) {
+            this->action = 5;
+            this->speed = 0;
+            InitializeAnimation(this, this->type + 1);
+        } else {
+            this->actionDelay = 0xc0;
+            this->field_0xf = 0x4;
+            this->field_0x80.HALF.LO ^= 0x1;
+        }
+    } else {
+        if (--this->field_0xf == 0) {
+            sub_0802ACDC(this, 4);
+        }
+    }
+#else
     switch (this->field_0x78.HALF.LO) {
         case 0:
             if (this->z.HALF.HI) {
@@ -259,8 +290,8 @@ void sub_0802AB40(Entity* this) {
             }
             break;
     }
-}
 #endif
+}
 
 void sub_0802AC08(Entity* this) {
     if (this->frame & 0x80) {
@@ -274,9 +305,6 @@ void sub_0802AC08(Entity* this) {
     GetNextFrame(this);
 }
 
-#ifdef EU
-ASM_FUNC("asm/non_matching/eu/sub_0802AC40.inc", void sub_0802AC40(Entity* this))
-#else
 void sub_0802AC40(Entity* this) {
     GetNextFrame(this);
     LinearMoveUpdate(this);
@@ -284,7 +312,9 @@ void sub_0802AC40(Entity* this) {
         if (sub_0802B234(this) == 0) {
             this->field_0x7a.HALF.LO = 0;
             this->spritePriority.b1 = 0;
-        } else {
+        }
+#ifndef EU
+        else {
             if (this->z.HALF.HI == 0) {
                 if (this->spritePriority.b1 != 1) {
                     this->spritePriority.b1 = 1;
@@ -295,18 +325,23 @@ void sub_0802AC40(Entity* this) {
                 }
             }
         }
+#endif
     } else {
         if (sub_0802B234(this)) {
             this->field_0x7a.HALF.LO = 1;
+
+#ifndef EU
             if (this->z.HALF.HI == 0) {
                 this->spritePriority.b1 = 1;
             } else {
                 this->spritePriority.b1 = 3;
             }
+#else
+            this->spritePriority.b1 = 3;
+#endif
         }
     }
 }
-#endif
 
 void sub_0802ACDC(Entity* this, u32 param_2) {
     u32 x;
@@ -355,10 +390,6 @@ void sub_0802AD54(Entity* this) {
     }
 }
 
-#ifdef EU
-// TODO regalloc in EU version
-ASM_FUNC("asm/non_matching/eu/sub_0802ADDC.inc", void sub_0802ADDC(Entity* this))
-#else
 void sub_0802ADDC(Entity* this) {
     Entity* ent = CreateEnemy(BOMB_PEAHAT, this->type + 2);
     if (ent != NULL) {
@@ -366,16 +397,17 @@ void sub_0802ADDC(Entity* this) {
         ent->parent = this;
         this->child = ent;
         CopyPosition(this, ent);
-        /*#ifdef EU
-                this->z.HALF.HI += 8;
-        #endif*/
+
+#ifdef EU
+        ent->z.HALF.HI += 8;
+#endif
+
         this->field_0x80.HALF.HI = 1;
         if (this->type == 0) {
             this->field_0x7a.HALF.LO++;
         }
     }
 }
-#endif
 
 void sub_0802AE24(Entity* this) {
     this->action = 1;
@@ -391,7 +423,32 @@ void sub_0802AE24(Entity* this) {
 }
 
 #ifdef EU
-ASM_FUNC("asm/non_matching/eu/sub_0802AE68.inc", void sub_0802AE68(Entity* this))
+void sub_0802AE68(Entity* this) {
+    Entity* ent = this->parent;
+    if (ent == 0) {
+        this->action = 3;
+        this->spriteSettings.draw = 1;
+        this->field_0x80.HALF.LO = 1;
+    }
+
+    if (ent->field_0x80.HALF.HI) {
+        CopyPosition(ent, this);
+        this->z.HALF.HI += 8;
+        this->spriteSettings.draw = 0;
+    } else {
+        this->action = 3;
+        this->field_0x80.HALF.LO = 1;
+        this->spriteSettings.draw = 1;
+
+        if (sub_0802B234(this)) {
+            this->spritePriority.b1 = 3;
+        } else {
+            this->spritePriority.b1 = 0;
+        }
+
+        GetNextFrame(this);
+    }
+}
 #else
 void sub_0802AE68(Entity* this) {
     Entity* ent = sub_0802B250(this);
@@ -568,7 +625,33 @@ void sub_0802B1A0(Entity* this) {
 }
 
 #ifdef EU
-ASM_FUNC("asm/non_matching/eu/sub_0802B1BC.inc", void sub_0802B1BC(Entity* this))
+void sub_0802B1BC(Entity* this) {
+    Entity* ent;
+
+    if (this->actionDelay) {
+        this->actionDelay--;
+    }
+
+    ent = this->parent;
+    if (ent == 0) {
+        this->action = 2;
+        this->spriteSettings.draw = 1;
+    }
+
+    if (ent->field_0x80.HALF.HI) {
+        CopyPosition(ent, this);
+        this->z.HALF.HI += 8;
+    } else {
+        this->action = 2;
+        this->spriteSettings.draw = 1;
+        if (sub_0802B234(this)) {
+            this->spritePriority.b1 = 3;
+        } else {
+            this->spritePriority.b1 = 0;
+        }
+        GetNextFrame(this);
+    }
+}
 #else
 void sub_0802B1BC(Entity* this) {
     Entity* ent;
