@@ -4314,21 +4314,16 @@ extern u32 Area_HyruleTown[];
 u32 sub_unk3_HyruleTown_0(void) {
     u32 uVar1;
     u32 uVar2;
-    int iVar3;
 
     UpdateGlobalProgress();
-    iVar3 = CheckKinstoneFused(0xb);
-    if (iVar3 != 0) {
-        iVar3 = CheckGlobalFlag(0x19);
-        if (iVar3 == 0) {
+    if (CheckKinstoneFused(0xb)) {
+        if (CheckGlobalFlag(0x19) == 0) {
             SetGlobalFlag(0x19);
-        } else {
-            iVar3 = CheckGlobalFlag(0x18);
-            if (iVar3 == 0) {
-                SetGlobalFlag(0x18);
-            }
+        } else if (CheckGlobalFlag(0x18) == 0) {
+            SetGlobalFlag(0x18);
         }
     }
+
     sub_0804AFB0((void**)(Area_HyruleTown[gSave.global_progress]));
     if (gSave.global_progress != 1) {
         gCurrentRoomProperties = (void**)*Area_HyruleTown;
